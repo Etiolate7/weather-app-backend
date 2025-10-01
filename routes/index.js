@@ -27,11 +27,44 @@ router.post("/weather", (req, res) => {
     tempMin: req.body.tempMin,
     tempMax: req.body.tempMax,
   };
-  if (weather.some((element) => element.cityName === newCity.cityName)) {
+  if (weather.some((element) => element.cityName.toLowerCase() === newCity.cityName.toLowerCase())) {
     res.json({ result: false, error: "City already saved" });
   } else {
     weather.push(newCity);
     res.json({ result: true, weather: newCity });
+  }
+});
+
+
+router.get("/weather", (req, res) => {
+  res.json({ weather });
+});
+
+
+router.get("/weather/:cityName", (req, res) => {
+  const param = req.params["cityName"];
+  const found = weather.find(element => element.cityName.toLowerCase() === req.params.cityName.toLowerCase());
+  if (found) {
+    res.json({ result: true, weather: found });
+  } else {
+    res.json({ result: false, error: "City not found" });
+  }
+});
+
+
+router.delete("/weather/:cityName", (req, res) => {
+  const param = req.params["cityName"];
+  const found = weather.find((element) => element.cityName.toLowerCase() === req.params.cityName.toLowerCase());
+  console.log(param)
+  if (found) {
+    console.log(found)
+  const index = weather.indexOf(found)
+  weather.splice(index, 1)
+  console.log(index)
+  console.log(weather)
+    res.json({ result: true, weather });
+  } else {
+    res.json({ result: false, error: "City not found" });
   }
 });
 
