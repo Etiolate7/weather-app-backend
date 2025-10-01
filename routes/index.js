@@ -1,11 +1,18 @@
 var express = require('express');
 var router = express.Router();
+require('dotenv').config();
+
+const fetch = require("node-fetch");
+const API_KEY = process.env.API_KEY;
+
 
 let weather = [
-  { cityName: "London",
+  {
+    cityName: "London",
     description: "cloudy",
     tempMin: 12.95,
-    tempMax: 17.39 },
+    tempMax: 17.39
+  },
   {
     cityName: "Rio de Janeiro",
     description: "sunny",
@@ -21,19 +28,33 @@ let weather = [
 ];
 
 router.post("/weather", (req, res) => {
-  const newCity = {
-    cityName: req.body.cityName,
-    description: req.body.description,
-    tempMin: req.body.tempMin,
-    tempMax: req.body.tempMax,
-  };
-  if (weather.some((element) => element.cityName.toLowerCase() === newCity.cityName.toLowerCase())) {
-    res.json({ result: false, error: "City already saved" });
-  } else {
-    weather.push(newCity);
-    res.json({ result: true, weather: newCity });
-  }
+  fetch(
+    `https://api.openweathermap.org/data/2.5/weather?q=${req.body.cityName}&units=metric&appid=${API_KEY}`
+  )
+    .then((response) => response.json())
+    .then((data) => {
+      console.log(data);
+      if (
+        !weather.some(
+          (element) =>
+            element.cityName === req.body.cityName
+        )
+      ) {
+        const newCity = {
+          cityName: data.name,
+          description: data.weather[0].description,
+          main: data.weather[0].main,
+          tempMin: data.main.temp_min,
+          tempMax: data.main.temp_max,
+        };
+        weather.push(newCity);
+        res.json({ result: true, weather: newCity });
+      } else {
+        res.json({ result: false, error: "City already saved" });
+      }
+    });
 });
+
 
 
 router.get("/weather", (req, res) => {
@@ -58,10 +79,10 @@ router.delete("/weather/:cityName", (req, res) => {
   console.log(param)
   if (found) {
     console.log(found)
-  const index = weather.indexOf(found)
-  weather.splice(index, 1)
-  console.log(index)
-  console.log(weather)
+    const index = weather.indexOf(found)
+    weather.splice(index, 1)
+    console.log(index)
+    console.log(weather)
     res.json({ result: true, weather });
   } else {
     res.json({ result: false, error: "City not found" });
